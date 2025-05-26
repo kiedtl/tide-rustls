@@ -1,6 +1,6 @@
 # Tide rustls listener
 
-## tls listener for [tide](https://github.com/http-rs/tide) based on [async-rustls](https://github.com/smol-rs/async-rustls)
+A TLS listener for [tide](https://github.com/http-rs/tide), based on `futures-rustls`.
 
 * [CI ![CI][ci-badge]][ci]
 * [API Docs][docs] [![docs.rs docs][docs-badge]][docs]
@@ -21,18 +21,19 @@ $ cargo add tide-rustls
 
 ## Using with tide
 ```rust
-#[async_std::main]
-async fn main() -> tide::Result<()> {
-    let mut app = tide::new();
-    app.at("/").get(|_| async { Ok("Hello TLS") });
-    app.listen(
-        TlsListener::build()
-            .addrs("localhost:4433")
-            .cert(std::env::var("TIDE_CERT_PATH").unwrap())
-            .key(std::env::var("TIDE_KEY_PATH").unwrap()),
-        )
-        .await?;
-    Ok(())
+fn main() -> tide::Result<()> {
+    smol::block_on(async {
+        let mut app = tide::new();
+        app.at("/").get(|_| async { Ok("Hello TLS") });
+        app.listen(
+            TlsListener::build()
+                .addrs("localhost:4433")
+                .cert(std::env::var("TIDE_CERT_PATH").unwrap())
+                .key(std::env::var("TIDE_KEY_PATH").unwrap()),
+            )
+            .await?;
+        Ok(())
+    })
 }
 ```
 
