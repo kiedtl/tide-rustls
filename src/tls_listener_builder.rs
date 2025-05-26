@@ -1,5 +1,5 @@
-use async_std::io;
-use async_std::net::TcpListener;
+use smol::io;
+use smol::net::TcpListener;
 
 use rustls::ServerConfig;
 

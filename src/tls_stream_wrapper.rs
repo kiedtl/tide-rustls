@@ -1,7 +1,7 @@
 use async_dup::{Arc, Mutex};
-use async_rustls::server::TlsStream;
-use async_std::io::{Read, Result, Write};
-use async_std::net::TcpStream;
+use futures_rustls::server::TlsStream;
+use smol::io::{AsyncRead, Result, AsyncWrite};
+use smol::net::TcpStream;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -14,7 +14,7 @@ impl TlsStreamWrapper {
     }
 }
 
-impl Read for TlsStreamWrapper {
+impl AsyncRead for TlsStreamWrapper {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
@@ -24,7 +24,7 @@ impl Read for TlsStreamWrapper {
     }
 }
 
-impl Write for TlsStreamWrapper {
+impl AsyncWrite for TlsStreamWrapper {
     fn poll_write(self: Pin<&mut Self>, cx: &mut Context<'_>, buf: &[u8]) -> Poll<Result<usize>> {
         Pin::new(&mut &*self.0).poll_write(cx, buf)
     }

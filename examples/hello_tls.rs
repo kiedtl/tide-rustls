@@ -11,7 +11,7 @@ async fn endpoint(req: tide::Request<()>) -> tide::Result<impl Into<tide::Respon
 }
 
 fn main() -> std::io::Result<()> {
-    async_std::task::block_on(async {
+    smol::block_on(async {
         let mut app = tide::new();
         app.at("*").all(endpoint);
         app.at("/").all(endpoint);

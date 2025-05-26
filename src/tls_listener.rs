@@ -7,13 +7,14 @@ use tide::listener::ListenInfo;
 use tide::listener::{Listener, ToListener};
 use tide::Server;
 
-use async_std::net::{TcpListener, TcpStream};
-use async_std::prelude::*;
-use async_std::{io, task};
+use smol;
+use smol::{io, prelude::*};
+use smol::net::{TcpListener, TcpStream};
 
-use async_rustls::TlsAcceptor;
-use rustls::internal::pemfile::{certs, pkcs8_private_keys, rsa_private_keys};
-use rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
+use futures_rustls::TlsAcceptor;
+use rustls_pemfile::{certs, pkcs8_private_keys, rsa_private_keys};
+use rustls::ServerConfig;
+use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 
 use std::fmt::{self, Debug, Display, Formatter};
 use std::fs::File;
@@ -88,9 +89,9 @@ impl<State> TlsListener<State> {
             TlsListenerConfig::Paths { cert, key } => {
                 let certs = load_certs(&cert)?;
                 let mut keys = load_keys(&key)?;
-                let mut config = ServerConfig::new(NoClientAuth::new());
-                config
-                    .set_single_cert(certs, keys.remove(0))
+                let config = ServerConfig::builder()
+                    .with_no_client_auth()
+                    .with_single_cert(certs, keys.remove(0))
                     .map_err(|err| io::Error::new(io::ErrorKind::InvalidInput, err))?;
 
                 TlsListenerConfig::Acceptor(Arc::new(StandardTlsAcceptor(TlsAcceptor::from(
@@ -143,7 +144,7 @@ fn handle_tls<State: Clone + Send + Sync + 'static>(
     stream: TcpStream,
     acceptor: Arc<dyn CustomTlsAcceptor>,
 ) {
-    task::spawn(async move {
+    smol::spawn(async move {
         let local_addr = stream.local_addr().ok();
         let peer_addr = stream.peer_addr().ok();
 
@@ -171,7 +172,7 @@ fn handle_tls<State: Clone + Send + Sync + 'static>(
                 tide::log::error!("tls error", { error: tls_error.to_string() });
             }
         }
-    });
+    }).detach();
 }
 
 impl<State: Clone + Send + Sync + 'static> ToListener<State> for TlsListener<State> {
@@ -210,7 +211,7 @@ impl<State: Clone + Send + Sync + 'static> Listener<State> for TlsListener<State
                 Err(error) => {
                     let delay = Duration::from_millis(500);
                     tide::log::error!("Error: {}. Pausing for {:?}.", error, delay);
-                    task::sleep(delay).await;
+                    smol::Timer::after(delay).await;
                     continue;
                 }
 
@@ -253,25 +254,29 @@ impl<State> Display for TlsListener<State> {
     }
 }
 
-fn load_certs(path: &Path) -> io::Result<Vec<Certificate>> {
+fn load_certs(path: &Path) -> io::Result<Vec<CertificateDer<'static>>> {
     certs(&mut BufReader::new(File::open(path)?))
+        .collect::<Result<Vec<_>, _>>()
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid cert"))
 }
 
-fn load_keys(path: &Path) -> io::Result<Vec<PrivateKey>> {
+fn load_keys(path: &Path) -> io::Result<Vec<PrivateKeyDer<'static>>> {
     let mut bufreader = BufReader::new(File::open(path)?);
-    if let Ok(pkcs8) = pkcs8_private_keys(&mut bufreader) {
-        if !pkcs8.is_empty() {
-            return Ok(pkcs8);
-        }
+
+    let pkcs8 = pkcs8_private_keys(&mut bufreader)
+        .filter_map(|pk| Some(PrivateKeyDer::Pkcs8(pk.ok()?)))
+        .collect::<Vec<_>>();
+    if !pkcs8.is_empty() {
+        return Ok(pkcs8);
     }
 
     bufreader.seek(SeekFrom::Start(0))?;
 
-    if let Ok(rsa) = rsa_private_keys(&mut bufreader) {
-        if !rsa.is_empty() {
-            return Ok(rsa);
-        }
+    let rsa = rsa_private_keys(&mut bufreader)
+        .filter_map(|pk| Some(PrivateKeyDer::Pkcs1(pk.ok()?)))
+        .collect::<Vec<_>>();
+    if !rsa.is_empty() {
+        return Ok(rsa);
     }
 
     Err(io::Error::new(io::ErrorKind::InvalidInput, "invalid key"))

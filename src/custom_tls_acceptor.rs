@@ -1,5 +1,5 @@
-use async_rustls::server::TlsStream;
-use async_std::net::TcpStream;
+use futures_rustls::server::TlsStream;
+use smol::net::TcpStream;
 
 /// The CustomTlsAcceptor trait provides a custom implementation of accepting
 /// TLS connections from a [`TcpStream`]. tide-rustls will call the
@@ -21,7 +21,7 @@ pub trait CustomTlsAcceptor: Send + Sync {
 /// Crate-private adapter to make `async_rustls::TlsAcceptor` implement
 /// `CustomTlsAcceptor`, without creating a conflict between the two `accept`
 /// methods.
-pub(crate) struct StandardTlsAcceptor(pub(crate) async_rustls::TlsAcceptor);
+pub(crate) struct StandardTlsAcceptor(pub(crate) futures_rustls::TlsAcceptor);
 
 #[tide::utils::async_trait]
 impl CustomTlsAcceptor for StandardTlsAcceptor {

@@ -1,4 +1,4 @@
-use async_std::net::{SocketAddr, TcpListener};
+use smol::net::{SocketAddr, TcpListener};
 use std::fmt::{self, Debug, Display, Formatter};
 
 #[derive(Debug)]

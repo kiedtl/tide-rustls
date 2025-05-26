@@ -4,7 +4,7 @@
 //! # Example
 //! ```rust
 //! # use tide_rustls::TlsListener;
-//! # fn main() -> tide::Result<()> { async_std::task::block_on(async {
+//! # fn main() -> tide::Result<()> { smol::task::block_on(async {
 //!     let mut app = tide::new();
 //!     app.at("/").get(|_| async { Ok("Hello tls") });
 //! # if false {
@@ -42,5 +42,5 @@ pub use custom_tls_acceptor::CustomTlsAcceptor;
 pub use tls_listener::TlsListener;
 pub use tls_listener_builder::TlsListenerBuilder;
 
-pub use async_rustls;
+pub use futures_rustls;
 pub use rustls;
