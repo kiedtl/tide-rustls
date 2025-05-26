@@ -211,7 +211,7 @@ impl<State> TlsListenerBuilder<State> {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     "need exactly one of cert + key, ServerConfig, or TLS acceptor",
-                ))
+                ));
             }
         };
 
@@ -222,7 +222,7 @@ impl<State> TlsListenerBuilder<State> {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     "either tcp or addrs are required",
-                ))
+                ));
             }
         };
 

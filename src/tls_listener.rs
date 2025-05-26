@@ -3,18 +3,18 @@ use crate::{
     CustomTlsAcceptor, TcpConnection, TlsListenerBuilder, TlsListenerConfig, TlsStreamWrapper,
 };
 
+use tide::Server;
 use tide::listener::ListenInfo;
 use tide::listener::{Listener, ToListener};
-use tide::Server;
 
 use smol;
-use smol::{io, prelude::*};
 use smol::net::{TcpListener, TcpStream};
+use smol::{io, prelude::*};
 
 use futures_rustls::TlsAcceptor;
-use rustls_pemfile::{certs, pkcs8_private_keys, rsa_private_keys};
 use rustls::ServerConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
+use rustls_pemfile::{certs, pkcs8_private_keys, rsa_private_keys};
 
 use std::fmt::{self, Debug, Display, Formatter};
 use std::fs::File;

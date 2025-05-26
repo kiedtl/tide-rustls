@@ -1,6 +1,6 @@
 use async_dup::{Arc, Mutex};
 use futures_rustls::server::TlsStream;
-use smol::io::{AsyncRead, Result, AsyncWrite};
+use smol::io::{AsyncRead, AsyncWrite, Result};
 use smol::net::TcpStream;
 use std::pin::Pin;
 use std::task::{Context, Poll};
