@@ -4,7 +4,7 @@
 //! # Example
 //! ```rust
 //! # use tide_rustls::TlsListener;
-//! # fn main() -> tide::Result<()> { smol::task::block_on(async {
+//! # fn main() -> tide::Result<()> { smol::block_on(async {
 //!     let mut app = tide::new();
 //!     app.at("/").get(|_| async { Ok("Hello tls") });
 //! # if false {

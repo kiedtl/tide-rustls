@@ -31,14 +31,6 @@ use std::sync::Arc;
 /// ```rust
 /// # use tide_rustls::TlsListener;
 /// let listener = TlsListener::<()>::build()
-///     .tcp(std::net::TcpListener::bind("localhost:4433").unwrap())
-///     .config(rustls::ServerConfig::new(rustls::NoClientAuth::new()))
-///     .finish();
-/// ```
-///
-/// ```rust
-/// # use tide_rustls::TlsListener;
-/// let listener = TlsListener::<()>::build()
 ///     .addrs("localhost:4433")
 ///     .cert("./tls/localhost-4433.cert")
 ///     .key("./tls/localhost-4433.key")
